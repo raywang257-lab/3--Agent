@@ -10,4 +10,4 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-st.iframe("/dashboard/", width="stretch", height=1200, tab_index=0)
+st.iframe("/~/+/dashboard/", width="stretch", height=1200, tab_index=0)
