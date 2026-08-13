@@ -1,0 +1,12 @@
+project_name = "trendscope-hotspot-agent"
+instructions_file = "../AGENTS.md"
+default_skill = "skills/hotspot-analysis-report/SKILL.md"
+
+[workflow]
+roles = ["explorer", "pm", "builder", "tester", "reporter"]
+sequence = ["explorer", "pm", "builder", "tester", "reporter"]
+
+[quality]
+require_source_traceability = true
+require_tests = true
+forbid_unverified_hotspot_claims = true

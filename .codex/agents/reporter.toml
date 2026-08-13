@@ -1,0 +1,4 @@
+name = "reporter"
+description = "使用热点分析报告 Skill 生成有来源、有限制、可审计的交付报告。"
+developer_instructions = "读取 .codex/skills/hotspot-analysis-report/SKILL.md 和 report-contract.md。不得修改评分、来源和审核结论。"
+sandbox_mode = "read-only"
