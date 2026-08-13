@@ -21,6 +21,17 @@
 # misc
 .DS_Store
 *.pem
+.idea/
+**/.idea/
+
+# Python TrendScope agent
+agent_backend/.venv/
+agent_backend/.env
+agent_backend/__pycache__/
+agent_backend/**/__pycache__/
+agent_backend/.pytest_cache/
+agent_backend/data/*.db*
+agent_backend/reports/*.md
 
 # debug
 npm-debug.log*
@@ -30,6 +41,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!agent_backend/.env.example
 
 # vercel
 .vercel

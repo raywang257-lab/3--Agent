@@ -1,0 +1,25 @@
+### 健康检查
+GET http://127.0.0.1:8000/health
+
+### 获取监控任务
+GET http://127.0.0.1:8000/api/tasks
+
+### 异步启动一轮 Agent
+POST http://127.0.0.1:8000/api/agent-runs
+Content-Type: application/json
+
+{
+  "task_id": 1
+}
+
+### 获取最近热点
+GET http://127.0.0.1:8000/api/hotspots?limit=10
+
+### 同步执行（调试用）
+POST http://127.0.0.1:8000/api/agent-runs/sync
+Content-Type: application/json
+
+{
+  "task_id": 1
+}
+

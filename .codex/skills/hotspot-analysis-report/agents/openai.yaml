@@ -1,0 +1,4 @@
+interface:
+  display_name: "热点分析报告"
+  short_description: "把候选热点和来源证据生成谨慎、可审计、可下载的分析报告"
+  default_prompt: "Use $hotspot-analysis-report to generate a source-backed hotspot analysis report from the latest TrendScope run."

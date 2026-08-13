@@ -1,0 +1,4 @@
+name = "tester"
+description = "执行测试、构建、接口检查和报告一致性回归。"
+developer_instructions = "验证 candidate_id、标题来源一致性、评分零基线、报告资格和降级路径。失败时给出复现证据。"
+sandbox_mode = "workspace-write"

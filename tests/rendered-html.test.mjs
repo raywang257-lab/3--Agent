@@ -1,91 +1,57 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
+const pageUrl = new URL("../app/page.tsx", import.meta.url);
+const layoutUrl = new URL("../app/layout.tsx", import.meta.url);
 
-async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  );
-}
-
-test("server-renders the starter loading skeleton", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
-  const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Building your site/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(
-    html,
-    /Your first version will appear here automatically when it’s ready\./,
-  );
-  assert.doesNotMatch(html, /Codex/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+test("TrendScope page exposes the real agent workflow", async () => {
+  const [page, layout] = await Promise.all([
+    readFile(pageUrl, "utf8"),
+    readFile(layoutUrl, "utf8"),
+  ]);
+  assert.match(layout, /TrendScope 热点决策台/);
+  assert.match(page, /更新分析/);
+  assert.match(page, /查看执行日志/);
+  assert.match(page, /查看矩阵/);
+  assert.match(page, /补充证据并重新判断/);
+  assert.match(page, /尚未形成传播路径/);
+  assert.doesNotMatch(page, /AI 热点已载入/);
+  assert.match(page, /industries\.map/);
+  assert.match(page, /Python Agent 未连接/);
+  assert.match(page, /行业态势/);
+  assert.match(page, /热点发现 Agent 工作流/);
+  assert.match(page, /真实来源 → 清洗去重 → 合并事件 → AI总结 → 价值判断 → 人工确认 → 报告与邮件/);
+  assert.match(page, /候选事件平均价值分，不等同市场规模/);
+  assert.match(page, /态势标签占比/);
+  assert.match(page, /具身智能/);
+  assert.match(page, /智能体 \/ Agent/);
+  assert.match(page, /支付与数字银行/);
+  assert.match(page, /AI 药物发现/);
+  assert.match(page, /每个事件只计入一个最匹配的主标签/);
+  assert.match(page, /待细分科技事件/);
+  assert.match(page, /待细分金融事件/);
+  assert.match(page, /tag-event-list/);
+  assert.doesNotMatch(page, /其他前沿科技/);
+  assert.doesNotMatch(page, /其他金融科技/);
+  assert.doesNotMatch(page, /战略相关性/);
+  assert.match(page, /发布事实可核验/);
+  assert.match(page, /事实状态/);
+  assert.match(page, /趋势状态/);
+  assert.match(page, /业务优先级/);
+  assert.match(page, /当前动作/);
+  assert.match(page, /规则摘要/);
+  assert.match(page, /事件类型证据清单/);
+  assert.doesNotMatch(page, /达到事实门槛/);
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
-  ]);
-
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
-
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
-  );
-
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
-
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
-  );
+test("page does not ship hard-coded demo hotspots or fake features", async () => {
+  const page = await readFile(pageUrl, "utf8");
+  assert.doesNotMatch(page, /demoHotspots/);
+  assert.doesNotMatch(page, /Cursor 发布新版本/);
+  assert.doesNotMatch(page, /专题分析/);
+  assert.doesNotMatch(page, /设置预警/);
+  assert.doesNotMatch(page, /详情为演示入口/);
+  assert.doesNotMatch(page, /const series24/);
+  assert.doesNotMatch(page, /const series7/);
 });

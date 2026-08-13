@@ -1,0 +1,32 @@
+{
+  "topic": "人工智能",
+  "target_role": "AI 产品负责人",
+  "run": {
+    "id": "demo-run",
+    "items_collected": 120,
+    "candidates_created": 20,
+    "scoring_model_version": "evidence-zero-baseline-v2",
+    "analysis_prompt_version": "claims-evidence-v2"
+  },
+  "events": [
+    {
+      "id": 1,
+      "canonical_title": "Example AI repository 近期活跃",
+      "value_score": 22.8,
+      "value_level": "candidate",
+      "action_level": "谨慎验证",
+      "platform_count": 1,
+      "source_count": 1,
+      "growth_percent": null,
+      "review": {"status": "pending"},
+      "sources": [
+        {
+          "source": "github",
+          "title": "Example AI repository 近期活跃",
+          "url": "https://github.com/example/ai-repository"
+        }
+      ]
+    }
+  ],
+  "limitations": ["该示例只有一个独立发布方，不能证明热点成立。"]
+}
