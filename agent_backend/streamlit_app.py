@@ -19,11 +19,21 @@ async def dashboard_index(request):
     return FileResponse(INDEX_FILE)
 
 
+def dashboard_routes(base_path: str = ""):
+    prefix = f"/{base_path.strip('/')}" if base_path.strip("/") else ""
+    return [
+        Route(f"{prefix}/", dashboard_index),
+        Mount(f"{prefix}/assets", app=StaticFiles(directory=STATIC_DIR / "assets")),
+        Mount(f"{prefix}/agent", app=agent_api),
+    ]
+
+
+configured_base_path = str(st.get_option("server.baseUrlPath") or "")
+routes = dashboard_routes(configured_base_path)
+if configured_base_path:
+    routes.extend(dashboard_routes())
+
 app = st.App(
     str(BACKEND_DIR / "streamlit_native.py"),
-    routes=[
-        Route("/", dashboard_index),
-        Mount("/assets", app=StaticFiles(directory=STATIC_DIR / "assets")),
-        Mount("/agent", app=agent_api),
-    ],
+    routes=routes,
 )

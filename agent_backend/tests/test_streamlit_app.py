@@ -10,7 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 class StreamlitAppTests(unittest.TestCase):
     def test_asgi_root_serves_dashboard_and_agent_api(self) -> None:
-        from streamlit_app import app
+        from streamlit_app import app, dashboard_routes
 
         with TestClient(app) as client:
             dashboard = client.get("/")
@@ -26,6 +26,12 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertIn("javascript", asset.headers["content-type"])
         self.assertEqual(200, health.status_code)
         self.assertEqual("ok", health.json()["status"])
+
+        prefixed_paths = [route.path for route in dashboard_routes("cloud/base")]
+        self.assertEqual(
+            ["/cloud/base/", "/cloud/base/assets", "/cloud/base/agent"],
+            prefixed_paths,
+        )
 
     def test_dashboard_smoke_renders(self) -> None:
         app_path = Path(__file__).resolve().parents[1] / "streamlit_native.py"
