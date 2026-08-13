@@ -32,6 +32,8 @@ configured_base_path = str(st.get_option("server.baseUrlPath") or "")
 routes = dashboard_routes(configured_base_path)
 if configured_base_path:
     routes.extend(dashboard_routes())
+if configured_base_path.strip("/") != "~/+":
+    routes.extend(dashboard_routes("~/+"))
 
 app = st.App(
     str(BACKEND_DIR / "streamlit_native.py"),
