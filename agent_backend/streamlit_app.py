@@ -22,9 +22,9 @@ async def dashboard_index(request):
 def dashboard_routes(base_path: str = ""):
     prefix = f"/{base_path.strip('/')}" if base_path.strip("/") else ""
     return [
-        Route(f"{prefix}/", dashboard_index),
-        Mount(f"{prefix}/assets", app=StaticFiles(directory=STATIC_DIR / "assets")),
-        Mount(f"{prefix}/agent", app=agent_api),
+        Route(f"{prefix}/dashboard/", dashboard_index),
+        Mount(f"{prefix}/dashboard/assets", app=StaticFiles(directory=STATIC_DIR / "assets")),
+        Mount(f"{prefix}/dashboard/agent", app=agent_api),
     ]
 
 
@@ -36,7 +36,7 @@ if configured_base_path.strip("/") != "~/+":
     routes.extend(dashboard_routes("~/+"))
 
 app = st.App(
-    str(BACKEND_DIR / "streamlit_native.py"),
+    str(BACKEND_DIR / "streamlit_shell.py"),
     routes=routes,
     lifespan=agent_lifespan,
 )

@@ -18,9 +18,9 @@ class DatabaseTests(TestCase):
             biology = db.get_task(4)
         self.assertEqual(task.topic, "AI 编程工具")
         self.assertTrue(task.enabled)
-        self.assertEqual(task.time_window_hours, 30 * 24)
-        self.assertEqual(finance.time_window_hours, 30 * 24)
-        self.assertEqual(biology.time_window_hours, 30 * 24)
+        self.assertEqual(task.time_window_hours, 14 * 24)
+        self.assertEqual(finance.time_window_hours, 14 * 24)
+        self.assertEqual(biology.time_window_hours, 14 * 24)
         self.assertTrue(any("federalreserve.gov" in url for url in finance.rss_feeds))
         self.assertTrue(any("biorxiv.org" in url for url in biology.rss_feeds))
 
