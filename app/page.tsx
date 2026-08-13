@@ -556,7 +556,7 @@ function IndustryOverview({
       </section>
 
       <section className="overview-panel agent-pulse">
-        <header><div><span>04</span><h3>热点发现 Agent</h3></div><small>{health?.scheduler_enabled ? "自动定时运行" : "当前为手动运行"}</small></header>
+        <header><div><span>04</span><h3>热点发现 Agent</h3></div><small>{health?.scheduler_enabled ? "自动定时运行" : "进入页面自动分析"}</small></header>
         <div className="agent-flow">{[
           ["公开采集", runSummary?.items_collected ?? 0],
           ["相关信息", runSummary?.related_items ?? 0],
@@ -874,7 +874,7 @@ export default function Home() {
         <nav aria-label="主导航">
           {navItems.map((item) => <button key={item.id} className={item.id === view ? "active" : ""} onClick={() => item.id === "report" ? void generateReport() : item.id === "sources" ? void openDataSources() : setView(item.id)}><span>{item.icon}</span>{item.label}</button>)}
         </nav>
-        <div className="sidebar-agent-state"><i className={dataMode === "live" ? "online" : ""}/><span><b>{dataMode === "live" ? "Agent 已连接" : "Agent 未连接"}</b><small>{agentHealth?.scheduler_enabled ? "定时任务已开启" : "手动运行模式"}</small></span></div>
+        <div className="sidebar-agent-state"><i className={dataMode === "live" ? "online" : ""}/><span><b>{dataMode === "live" ? "Agent 已连接" : "Agent 未连接"}</b><small>{agentHealth?.scheduler_enabled ? "定时任务已开启" : "页面打开即自动分析"}</small></span></div>
       </aside>
 
       <section className="workspace">
