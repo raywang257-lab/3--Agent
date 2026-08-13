@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Hotspot = {
   id: number;
@@ -600,6 +600,8 @@ export default function Home() {
   const [agentHealth, setAgentHealth] = useState<AgentHealth | null>(null);
   const [updatedAt, setUpdatedAt] = useState("2026-08-12 10:30");
   const industry = industries.find((item) => item.id === industryId) ?? industries[1];
+  const activeTaskIdRef = useRef(industry.taskId);
+  const runningTaskIdsRef = useRef<Set<number>>(new Set());
   const selected = hotspots.find((item) => item.id === selectedId) ?? hotspots[0];
   const actionGroups = {
     "补证": hotspots.filter((item) => item.currentAction === "补证"),
@@ -608,6 +610,7 @@ export default function Home() {
     "观察/行动": hotspots.filter((item) => ["观察", "立即行动"].includes(item.currentAction)),
   };
   const priorityHotspot = hotspots[0];
+  activeTaskIdRef.current = industry.taskId;
 
   const selectFirst = (items: Hotspot[]) => {
     if (items[0]) setSelectedId(items[0].id);
@@ -626,7 +629,7 @@ export default function Home() {
       setDataMode(mapped.length ? "live" : "empty");
       const completedAt = payload.run?.completed_at ? new Date(payload.run.completed_at) : new Date();
       setUpdatedAt(completedAt.toLocaleString("zh-CN", { hour12: false }).replaceAll("/", "-"));
-      if (!silent) notify(mapped.length ? `已加载 ${mapped.length} 个候选线索` : "该行业还没有运行记录，请点击更新分析");
+      if (!silent) notify(mapped.length ? `已加载 ${mapped.length} 个候选线索` : "该行业还没有运行记录，Agent 将自动分析");
     } catch {
       setHotspots([]);
       setRunSummary(null);
@@ -634,11 +637,6 @@ export default function Home() {
       if (!silent) notify("Python Agent 未启动，暂时无法加载真实数据");
     }
   };
-
-  useEffect(() => {
-    void loadLiveHotspots(industry.taskId, true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [industry.taskId]);
 
   useEffect(() => {
     fetch(`${AGENT_API}/health`)
@@ -652,28 +650,35 @@ export default function Home() {
     window.setTimeout(() => setToast(""), 2200);
   };
 
-  const updateAnalysis = async () => {
-    if (isUpdating) return;
+  const updateAnalysis = async (taskId = industry.taskId, automatic = false) => {
+    if (runningTaskIdsRef.current.has(taskId)) return;
+    runningTaskIdsRef.current.add(taskId);
     setIsUpdating(true);
     try {
       const response = await fetch(`${AGENT_API}/api/agent-runs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ task_id: industry.taskId }),
+        body: JSON.stringify({ task_id: taskId }),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const { run_id } = await response.json() as { run_id: string };
-      setRunLogs([]);
-      notify("Agent 已启动：正在采集和分析真实公开信息");
+      const responsePayload = await response.json() as { run_id?: string; detail?: string };
+      const activeRunId = response.status === 409
+        ? responsePayload.detail?.match(/[0-9a-f]{32}/)?.[0]
+        : responsePayload.run_id;
+      if (!response.ok && response.status !== 409) throw new Error(`HTTP ${response.status}`);
+      if (!activeRunId) throw new Error("无法获取 Agent 运行编号");
+      if (!automatic) setRunLogs([]);
+      notify(response.status === 409 ? "Agent 正在自动分析，已接管当前任务" : "Agent 已自动启动：正在采集和分析公开信息");
       for (let attempt = 0; attempt < 180; attempt += 1) {
         await new Promise((resolve) => window.setTimeout(resolve, 1000));
-        const statusResponse = await fetch(`${AGENT_API}/api/agent-runs/${run_id}`);
+        const statusResponse = await fetch(`${AGENT_API}/api/agent-runs/${activeRunId}`);
         if (!statusResponse.ok) continue;
         const run = await statusResponse.json() as { status: string; error_message?: string };
-        const logsResponse = await fetch(`${AGENT_API}/api/agent-runs/${run_id}/logs`);
-        if (logsResponse.ok) setRunLogs(((await logsResponse.json()) as { items: RunLog[] }).items);
+        if (!automatic || runLogs !== null) {
+          const logsResponse = await fetch(`${AGENT_API}/api/agent-runs/${activeRunId}/logs`);
+          if (logsResponse.ok) setRunLogs(((await logsResponse.json()) as { items: RunLog[] }).items);
+        }
         if (run.status === "completed") {
-          await loadLiveHotspots(industry.taskId, true);
+          if (activeTaskIdRef.current === taskId) await loadLiveHotspots(taskId, true);
           notify("候选线索分析已完成");
           return;
         }
@@ -683,9 +688,23 @@ export default function Home() {
     } catch {
       notify("无法连接 Python Agent，请先运行 run_api.py");
     } finally {
-      setIsUpdating(false);
+      runningTaskIdsRef.current.delete(taskId);
+      setIsUpdating(runningTaskIdsRef.current.size > 0);
     }
   };
+
+  useEffect(() => {
+    const taskId = industry.taskId;
+    let cancelled = false;
+    const loadAndAnalyze = async () => {
+      await loadLiveHotspots(taskId, true);
+      if (!cancelled) await updateAnalysis(taskId, true);
+    };
+    void loadAndAnalyze();
+    return () => { cancelled = true; };
+  // 每次进入页面或切换行业时，自动启动真实数据分析。
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [industry.taskId]);
 
   const reviewSelected = async (status: "approved" | "rejected" | "pending") => {
     if (!selected) return;
@@ -861,7 +880,7 @@ export default function Home() {
       <section className="workspace">
         <header className="topbar">
           <div><h1>{industry.label} <i /> {view === "overview" ? "行业态势" : "热点发现 Agent"}</h1><p>公开渠道监控　·　数据截至 {updatedAt}　·　最近 14 天　·　{dataMode === "live" ? "真实数据" : dataMode === "loading" ? "加载中" : dataMode === "empty" ? "等待首次运行" : "Agent 未连接"}　<span className="info-dot">i</span></p></div>
-          <div className="top-actions"><span className="role-chip">♙　AI 产品与竞争情报</span><button className="ghost" onClick={() => void openLogs()}>▤　查看执行日志</button><button className="primary" disabled={isUpdating} onClick={updateAnalysis}>↻　{isUpdating ? "分析中…" : "更新分析"}</button></div>
+          <div className="top-actions"><span className="role-chip">♙　AI 产品与竞争情报</span><button className="ghost" onClick={() => void openLogs()}>▤　查看执行日志</button><button className="primary" disabled={isUpdating} onClick={() => void updateAnalysis()}>↻　{isUpdating ? "自动分析中…" : "立即重新分析"}</button></div>
         </header>
 
         <section className="industry-selector" aria-label="选择热点行业">
@@ -914,7 +933,7 @@ export default function Home() {
           <div className="left-column">
             <section className="panel trend-panel">
               <div className="panel-head"><div className="title-tabs"><h2>趋势与爆发信号</h2><button className={range === "24h" ? "selected" : ""} onClick={() => setRange("24h")}>24 小时</button><button className={range === "14d" ? "selected" : ""} onClick={() => setRange("14d")}>14 天</button></div><p>生命周期：萌芽　→　爆发　→　<b>扩散</b>　→　衰退</p></div>
-              {hotspots.length ? <><div className="legend">{hotspots.slice(0, 3).map((item, index) => <span key={item.id}><i className={["blue", "green", "amber"][index]} />{item.title}</span>)}<em>完成至少三轮同指标采集后确认持续增长</em></div><div className="trend-waiting"><b>{industry.label}候选线索已载入</b><p>当前只展示真实快照结论；低基数变化不会标成爆发，也不会绘制虚构折线。</p></div></> : <div className="trend-waiting"><b>{dataMode === "loading" ? "正在加载候选线索…" : dataMode === "offline" ? "Python Agent 未连接" : `${industry.label}行业暂无候选线索`}</b><p>{dataMode === "empty" ? "点击右上角“更新分析”，Agent 将从已配置的公开来源发现事件种子。" : "等待真实数据后再展示趋势和判断结果。"}</p></div>}
+              {hotspots.length ? <><div className="legend">{hotspots.slice(0, 3).map((item, index) => <span key={item.id}><i className={["blue", "green", "amber"][index]} />{item.title}</span>)}<em>完成至少三轮同指标采集后确认持续增长</em></div><div className="trend-waiting"><b>{industry.label}候选线索已载入</b><p>当前只展示真实快照结论；低基数变化不会标成爆发，也不会绘制虚构折线。</p></div></> : <div className="trend-waiting"><b>{dataMode === "loading" ? "正在加载候选线索…" : dataMode === "offline" ? "Python Agent 未连接" : `${industry.label}行业暂无候选线索`}</b><p>{dataMode === "empty" ? "Agent 已自动启动，正在从已配置的公开来源发现并分析事件。" : "等待真实数据后再展示趋势和判断结果。"}</p></div>}
             </section>
 
             <section className="hotspots-section">
@@ -963,7 +982,7 @@ export default function Home() {
               <div className="review-actions"><button className={selected.reviewStatus === "approved" ? "active approve" : "approve"} onClick={() => void reviewSelected("approved")}>✓　人工确认</button><button className={selected.reviewStatus === "rejected" ? "active reject" : "reject"} onClick={() => void reviewSelected("rejected")}>×　驳回热点</button><button onClick={() => void reviewSelected("pending")}>↺　恢复待审</button></div>
               <div className="quick-actions"><button disabled={isGeneratingReport} onClick={() => void generateReport()}>▤　{isGeneratingReport ? "报告生成中…" : "生成分析报告"}</button><button disabled={isDeepAnalyzing} onClick={() => void analyzeSelectedDeeply()}>◇　{isDeepAnalyzing ? "分析中…" : "深层原因分析"}</button><button disabled={isEnriching} onClick={() => void enrichSelected()}>⌁　{isEnriching ? "正在补充证据…" : "补充证据并重新判断"}</button><button className="email-action" onClick={() => void previewEmail()}>✉　邮件推送</button></div>
             </section>
-          </aside> : <aside className="right-column"><section className="panel empty-detail"><span>{industry.icon}</span><h2>选择 {industry.label} 行业热点</h2><p>{dataMode === "empty" ? "该行业还没有真实运行结果。点击右上角“更新分析”，完成采集后可查看热点摘要、判断依据、传播来源和风险。" : dataMode === "offline" ? "请先启动 Python Agent，再加载该行业的真实热点。" : "正在读取最新一轮热点结果。"}</p></section></aside>}
+          </aside> : <aside className="right-column"><section className="panel empty-detail"><span>{industry.icon}</span><h2>选择 {industry.label} 行业热点</h2><p>{dataMode === "empty" ? "Agent 已自动开始采集和分析，完成后将直接展示热点摘要、判断依据、传播来源和风险。" : dataMode === "offline" ? "请先启动 Python Agent，再加载该行业的真实热点。" : "正在读取最新一轮热点结果。"}</p></section></aside>}
         </div>
         </>}
       </section>

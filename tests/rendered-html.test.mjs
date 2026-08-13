@@ -11,7 +11,9 @@ test("TrendScope page exposes the real agent workflow", async () => {
     readFile(layoutUrl, "utf8"),
   ]);
   assert.match(layout, /TrendScope 热点决策台/);
-  assert.match(page, /更新分析/);
+  assert.match(page, /立即重新分析/);
+  assert.match(page, /loadAndAnalyze/);
+  assert.match(page, /updateAnalysis\(taskId, true\)/);
   assert.match(page, /查看执行日志/);
   assert.match(page, /查看矩阵/);
   assert.match(page, /补充证据并重新判断/);
