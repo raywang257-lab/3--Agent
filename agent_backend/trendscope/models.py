@@ -21,7 +21,7 @@ class MonitoringTask(BaseModel):
     excluded_keywords: list[str] = Field(default_factory=lambda: ["travel agent", "real estate agent"])
     rss_feeds: list[str] = Field(default_factory=list)
     target_role: str = "AI 产品与竞争情报负责人"
-    time_window_hours: int = 168
+    time_window_hours: int = 30 * 24
     enabled: bool = True
 
 

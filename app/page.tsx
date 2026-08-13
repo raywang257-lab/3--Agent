@@ -516,7 +516,7 @@ function IndustryOverview({
       </div>
       <div className={`overview-status ${statusTone}`}>
         <span>当前判断</span><strong>{status}</strong>
-        <p>数据截至 {updatedAt}<br/>最近 7 天 · {dataMode === "live" ? "真实公开数据" : dataMode === "loading" ? "正在加载" : "等待数据"}</p>
+        <p>数据截至 {updatedAt}<br/>最近 30 天 · {dataMode === "live" ? "真实公开数据" : dataMode === "loading" ? "正在加载" : "等待数据"}</p>
       </div>
     </section>
 
@@ -568,7 +568,7 @@ export default function Home() {
   const [runSummary, setRunSummary] = useState<ApiRunSummary | null>(null);
   const [dataMode, setDataMode] = useState<"loading" | "live" | "empty" | "offline">("loading");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [range, setRange] = useState<"24h" | "7d">("24h");
+  const [range, setRange] = useState<"24h" | "30d">("24h");
   const [question, setQuestion] = useState("");
   const [toast, setToast] = useState("");
   const [emailPreview, setEmailPreview] = useState<EmailPreview | null>(null);
@@ -850,7 +850,7 @@ export default function Home() {
 
       <section className="workspace">
         <header className="topbar">
-          <div><h1>{industry.label} <i /> {view === "overview" ? "行业态势" : "热点发现 Agent"}</h1><p>公开渠道监控　·　数据截至 {updatedAt}　·　最近 7 天　·　{dataMode === "live" ? "真实数据" : dataMode === "loading" ? "加载中" : dataMode === "empty" ? "等待首次运行" : "Agent 未连接"}　<span className="info-dot">i</span></p></div>
+          <div><h1>{industry.label} <i /> {view === "overview" ? "行业态势" : "热点发现 Agent"}</h1><p>公开渠道监控　·　数据截至 {updatedAt}　·　最近 30 天　·　{dataMode === "live" ? "真实数据" : dataMode === "loading" ? "加载中" : dataMode === "empty" ? "等待首次运行" : "Agent 未连接"}　<span className="info-dot">i</span></p></div>
           <div className="top-actions"><span className="role-chip">♙　AI 产品与竞争情报</span><button className="ghost" onClick={() => void openLogs()}>▤　查看执行日志</button><button className="primary" disabled={isUpdating} onClick={updateAnalysis}>↻　{isUpdating ? "分析中…" : "更新分析"}</button></div>
         </header>
 
@@ -903,7 +903,7 @@ export default function Home() {
         <div className="analysis-grid">
           <div className="left-column">
             <section className="panel trend-panel">
-              <div className="panel-head"><div className="title-tabs"><h2>趋势与爆发信号</h2><button className={range === "24h" ? "selected" : ""} onClick={() => setRange("24h")}>24 小时</button><button className={range === "7d" ? "selected" : ""} onClick={() => setRange("7d")}>7 天</button></div><p>生命周期：萌芽　→　爆发　→　<b>扩散</b>　→　衰退</p></div>
+              <div className="panel-head"><div className="title-tabs"><h2>趋势与爆发信号</h2><button className={range === "24h" ? "selected" : ""} onClick={() => setRange("24h")}>24 小时</button><button className={range === "30d" ? "selected" : ""} onClick={() => setRange("30d")}>30 天</button></div><p>生命周期：萌芽　→　爆发　→　<b>扩散</b>　→　衰退</p></div>
               {hotspots.length ? <><div className="legend">{hotspots.slice(0, 3).map((item, index) => <span key={item.id}><i className={["blue", "green", "amber"][index]} />{item.title}</span>)}<em>完成至少三轮同指标采集后确认持续增长</em></div><div className="trend-waiting"><b>{industry.label}候选线索已载入</b><p>当前只展示真实快照结论；低基数变化不会标成爆发，也不会绘制虚构折线。</p></div></> : <div className="trend-waiting"><b>{dataMode === "loading" ? "正在加载候选线索…" : dataMode === "offline" ? "Python Agent 未连接" : `${industry.label}行业暂无候选线索`}</b><p>{dataMode === "empty" ? "点击右上角“更新分析”，Agent 将从已配置的公开来源发现事件种子。" : "等待真实数据后再展示趋势和判断结果。"}</p></div>}
             </section>
 
