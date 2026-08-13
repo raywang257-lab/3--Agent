@@ -61,7 +61,17 @@ type Hotspot = {
   evidence: [string, string][];
 };
 
-const AGENT_API = process.env.NEXT_PUBLIC_AGENT_API_URL || "http://127.0.0.1:8000";
+const configuredAgentApi = typeof process !== "undefined"
+  ? process.env.NEXT_PUBLIC_AGENT_API_URL
+  : undefined;
+const streamlitBasePath = typeof window !== "undefined"
+  ? window.location.pathname.replace(/\/$/, "")
+  : "";
+const AGENT_API = configuredAgentApi || (
+  typeof window !== "undefined" && window.location.port !== "3000"
+    ? `${window.location.origin}${streamlitBasePath}/agent`
+    : "http://127.0.0.1:8000"
+);
 
 const industries = [
   { id: "technology", taskId: 2, label: "科技", icon: "⌘", description: "芯片、机器人、量子计算、网络安全与开源技术" },

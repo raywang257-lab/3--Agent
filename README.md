@@ -41,7 +41,7 @@ npm run dev
 
 ## Streamlit 单体部署
 
-仓库同时提供 Streamlit Community Cloud 入口，直接复用 Python Agent 的真实采集、聚类、评分、人工审核和报告能力，不依赖 React 或单独启动 FastAPI。
+仓库同时提供 Streamlit Community Cloud 入口。云端会原样加载 React 决策台，并在同一个 Streamlit 进程中挂载 Python Agent API，因此页面和交互与本地 `localhost:3000` 保持一致，也不需要单独启动 FastAPI 服务。
 
 本地运行：
 
@@ -50,6 +50,12 @@ cd agent_backend
 python -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
 ./.venv/bin/streamlit run streamlit_app.py
+```
+
+修改 React 页面后，先在仓库根目录更新 Streamlit 使用的静态构建：
+
+```bash
+npm run build:streamlit
 ```
 
 Streamlit Community Cloud 创建应用时填写：
