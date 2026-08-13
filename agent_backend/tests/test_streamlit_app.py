@@ -13,9 +13,9 @@ class StreamlitAppTests(unittest.TestCase):
         app.run(timeout=20)
 
         self.assertEqual([], list(app.exception))
-        self.assertEqual("TrendScope 热点发现 Agent", app.title[0].value)
-        self.assertTrue(any(button.label == "更新分析" for button in app.button))
-        self.assertTrue(any(control.label == "选择行业" for control in app.segmented_control))
+        self.assertTrue(any(status.label == "完整数据、报告与执行诊断" for status in app.get("status")))
+        self.assertTrue(any(button.label == "生成报告" for button in app.button))
+        self.assertEqual(["事件数据", "分析报告", "执行诊断"], [tab.label for tab in app.tabs])
 
 
 if __name__ == "__main__":
