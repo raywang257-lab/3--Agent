@@ -39,6 +39,30 @@ npm run dev
 
 访问 `http://localhost:3000`，API 文档为 `http://127.0.0.1:8000/docs`。
 
+## Streamlit 单体部署
+
+仓库同时提供 Streamlit Community Cloud 入口，直接复用 Python Agent 的真实采集、聚类、评分、人工审核和报告能力，不依赖 React 或单独启动 FastAPI。
+
+本地运行：
+
+```bash
+cd agent_backend
+python -m venv .venv
+./.venv/bin/pip install -r requirements.txt
+./.venv/bin/streamlit run streamlit_app.py
+```
+
+Streamlit Community Cloud 创建应用时填写：
+
+```text
+Repository: raywang257-lab/-3--Agent
+Branch: main
+Main file path: agent_backend/streamlit_app.py
+Python: 3.12
+```
+
+在 Advanced settings → Secrets 中配置 `OPENAI_API_KEY`、`AI_MODE`、`GITHUB_TOKEN` 和可选 SMTP 参数。不要提交 `.streamlit/secrets.toml`。云端本地 SQLite 只适合作业演示，容器重启后数据可能重置。
+
 ## AI 配置
 
 ```dotenv
