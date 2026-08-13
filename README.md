@@ -55,7 +55,7 @@ python -m venv .venv
 Streamlit Community Cloud 创建应用时填写：
 
 ```text
-Repository: raywang257-lab/-3--Agent
+Repository: raywang257-lab/3--Agent
 Branch: main
 Main file path: agent_backend/streamlit_app.py
 Python: 3.12
