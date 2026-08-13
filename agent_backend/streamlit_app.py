@@ -7,7 +7,7 @@ from starlette.responses import FileResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
-from trendscope.api import app as agent_api
+from trendscope.api import app as agent_api, lifespan as agent_lifespan
 
 
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -38,4 +38,5 @@ if configured_base_path.strip("/") != "~/+":
 app = st.App(
     str(BACKEND_DIR / "streamlit_native.py"),
     routes=routes,
+    lifespan=agent_lifespan,
 )

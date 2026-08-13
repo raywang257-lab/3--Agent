@@ -15,8 +15,10 @@ class StreamlitAppTests(unittest.TestCase):
         with TestClient(app) as client:
             dashboard = client.get("/")
             health = client.get("/agent/health")
+            tasks = client.get("/agent/api/tasks")
             cloud_dashboard = client.get("/~/+/")
             cloud_health = client.get("/~/+/agent/health")
+            cloud_tasks = client.get("/~/+/agent/api/tasks")
 
             asset_match = search(r'src="(\./assets/[^"]+\.js)"', dashboard.text)
             self.assertIsNotNone(asset_match)
@@ -28,8 +30,12 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertIn("javascript", asset.headers["content-type"])
         self.assertEqual(200, health.status_code)
         self.assertEqual("ok", health.json()["status"])
+        self.assertEqual(200, tasks.status_code)
+        self.assertEqual(30 * 24, tasks.json()["items"][0]["time_window_hours"])
         self.assertIn("TrendScope 行业态势 Agent", cloud_dashboard.text)
         self.assertEqual("ok", cloud_health.json()["status"])
+        self.assertEqual(200, cloud_tasks.status_code)
+        self.assertEqual(30 * 24, cloud_tasks.json()["items"][0]["time_window_hours"])
 
         prefixed_paths = [route.path for route in dashboard_routes("cloud/base")]
         self.assertEqual(
