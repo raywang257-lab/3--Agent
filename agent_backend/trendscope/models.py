@@ -224,3 +224,5 @@ class HealthResponse(BaseModel):
     ai_mode: str
     database: str
     scheduler_enabled: bool
+    email_configured: bool
+    email_recipient_count: int

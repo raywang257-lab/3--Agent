@@ -95,6 +95,8 @@ async def health() -> HealthResponse:
         ai_mode=settings.effective_ai_mode,
         database=str(settings.database_path),
         scheduler_enabled=settings.schedule_enabled,
+        email_configured=settings.email_configured,
+        email_recipient_count=len(settings.email_recipients),
     )
 
 

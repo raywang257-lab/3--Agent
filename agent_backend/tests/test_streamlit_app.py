@@ -32,6 +32,8 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertIn("javascript", asset.headers["content-type"])
         self.assertEqual(200, health.status_code)
         self.assertEqual("ok", health.json()["status"])
+        self.assertIn("email_configured", health.json())
+        self.assertIn("email_recipient_count", health.json())
         self.assertEqual(200, tasks.status_code)
         self.assertEqual(14 * 24, tasks.json()["items"][0]["time_window_hours"])
         self.assertIn("TrendScope 行业态势 Agent", cloud_dashboard.text)
